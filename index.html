@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공격대 구성기</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="Common.js"></script>
+  <script id="mode-script" src="Raid16.js" defer></script>
+</head>
+<body>
+
+  <div class="top-bar">
+    <button onclick="switchMode(8)">8인 기준</button>
+    <button onclick="switchMode(16)">16인 기준</button>
+  </div>
+
+  <h2>공격대 구성기</h2>
+  <p>각 유저의 캐릭터를 다음 형식으로 입력해주세요:<br>
+    <code>60 환수사 / 60 건슬 // 70 소울 / 40 바드</code>
+  </p>
+
+  <div id="user-list"></div>
+
+  <button onclick="generateRaid()">공격대 생성!</button>
+
+  <div id="result"></div>
+  <div id="help-btn">?</div>
+  <div id="tooltip"></div>
+
+  <script>
+    function switchMode(mode) {
+      const scriptTag = document.getElementById('mode-script');
+      if (scriptTag) scriptTag.remove();
+      const newScript = document.createElement('script');
+      newScript.id = 'mode-script';
+      newScript.src = mode === 8 ? 'Raid8.js' : 'Raid16.js';
+      newScript.defer = true;
+      document.body.appendChild(newScript);
+    }
+
+    // 도움말 툴팁 로직
+    window.addEventListener("DOMContentLoaded", () => {
+      const tooltip = document.getElementById("tooltip");
+      const helpBtn = document.getElementById("help-btn");
+
+      const dealerChunks = 딜러직업군.reduce((acc, val, i) => {
+        const line = Math.floor(i / 4);
+        acc[line] = acc[line] || [];
+        acc[line].push(val);
+        return acc;
+      }, []);
+
+      const supporterChunks = 서포터직업군.reduce((acc, val, i) => {
+        const line = Math.floor(i / 4);
+        acc[line] = acc[line] || [];
+        acc[line].push(val);
+        return acc;
+      }, []);
+
+      tooltip.innerHTML =
+        `<strong>딜러 직업군</strong><br>` +
+        dealerChunks.map(group => group.join(" / ")).join("<br>") +
+        `<br><br><strong>서포터 직업군</strong><br>` +
+        supporterChunks.map(group => group.join(" / ")).join("<br>");
+
+      helpBtn.addEventListener("mouseenter", () => {
+        tooltip.style.display = "block";
+      });
+      helpBtn.addEventListener("mouseleave", () => {
+        tooltip.style.display = "none";
+      });
+      tooltip.addEventListener("mouseenter", () => {
+        tooltip.style.display = "block";
+      });
+      tooltip.addEventListener("mouseleave", () => {
+        tooltip.style.display = "none";
+      });
+    });
+  </script>
+
+</body>
+</html>
