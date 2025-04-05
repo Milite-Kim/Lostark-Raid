@@ -3,6 +3,7 @@
   const userCount = 16;
   const partySize = 4;
   const raidPartyCount = userCount / partySize;
+  const totalRounds = 4;
 
   // 🧱 입력창 생성
   const userListDiv = gid('user-list');
@@ -39,29 +40,13 @@
       return al(err.message);
     }
 
-    const maxRounds = Math.max(...users.map(u => u.characters.length));
     const usedIds = new Set();
     const userUsage = Array(userCount).fill(null).map(() => []);
     const results = [];
 
-    for (let round = 0; round < maxRounds; round++) {
+    for (let round = 0; round < totalRounds; round++) {
       const available = buildCharacterPool(users, round, usedIds);
-
-      let success = false, raid;
-      for (let accSwitch = 1; accSwitch <= 3 && !success; accSwitch++) {
-        for (let allowDup of [false, true]) {
-          const result = tryBuildRaid(available, 4, {
-            allowDuplicateDealers: allowDup,
-            maxAccountSwitches: accSwitch,
-            maxRetries: 500
-          });
-          if (result.success) {
-            success = true;
-            raid = result.raid;
-            break;
-          }
-        }
-      }
+      let { success, raid } = tryBuildRaid(available, 4);
 
       if (!success || !raid) {
         console.warn(`⚠️ ${round + 1}회차: 유저 캐릭터만으로 구성 실패. 외부 인원으로 보완 진행.`);
