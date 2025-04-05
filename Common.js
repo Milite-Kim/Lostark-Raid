@@ -10,6 +10,9 @@ const 딜러직업군 = [
 
 const 서포터직업군 = ["바드", "도화가", "홀나"];
 
+// 충돌 직업군 조건 제거됨
+const conflictPairs = []; // 더 이상 충돌 조건 없음
+
 // DOM 단축
 const gid = id => document.getElementById(id);
 const ce = tag => document.createElement(tag);
@@ -49,6 +52,11 @@ return {
 };
 }
 
+// 충돌 직업군 체크 함수 (비활성화됨)
+function hasConflict(party) {
+return false; // 조건 완화: 충돌 없음
+}
+
 // 캐릭터 풀 생성 함수 (8인/16인 공용)
 function buildCharacterPool(users, round, usedIds) {
 return users.flatMap(user => {
@@ -62,72 +70,54 @@ function showGeneratingStatus() {
 gid("result").textContent = "⚙️ 공격대 구성 중...";
 }
 
-// 공통 파티 구성 함수 (조건 완화 시도 포함)
-window.tryBuildRaid = function (pool, numParties, options = {}) {
-const {
-  allowDuplicateDealers = false,
-  maxAccountSwitches = 1,
-  maxRetries = 100
-} = options;
+// 공통 파티 구성 함수
+window.tryBuildRaid = function (pool, numParties) {
+const shuffled = [...pool].sort(() => Math.random() - 0.5);
+const result = [];
+const usedUsers = new Set();
+const usedIds = new Set();
 
-for (let retry = 0; retry < maxRetries; retry++) {
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const result = [];
-  const usedUsers = new Set();
-  const usedIds = new Set();
+for (let i = 0; i < numParties; i++) {
+  const party = [];
+  const partyUsers = new Set();
+  const partyDealers = [];
+  const partySupporters = [];
 
-  let valid = true;
+  for (const c of shuffled) {
+    if (usedIds.has(c.id)) continue;
+    if (usedUsers.has(c.userIndex)) continue;
+    if (partyUsers.has(c.userIndex)) continue;
 
-  for (let i = 0; i < numParties; i++) {
-    const party = [];
-    const partyUsers = new Set();
-    const partyDealers = [];
-    const partySupporters = [];
-
-    for (const c of shuffled) {
-      if (usedIds.has(c.id)) continue;
-      if (usedUsers.has(c.userIndex)) continue;
-      if (partyUsers.has(c.userIndex)) continue;
-
-      const sameUserChars = party.filter(p => p.userIndex === c.userIndex);
-      const accountGroups = new Set(sameUserChars.map(cc => cc.accountGroup));
-      accountGroups.add(c.accountGroup);
-      if (accountGroups.size > maxAccountSwitches + 1) continue;
-
-      if (c.type === "딜러") {
-        const isExternal = c.userIndex === -1;
-        if (partyDealers.length >= 3) continue;
-        if (!isExternal && !allowDuplicateDealers && partyDealers.some(d => d.job === c.job && d.userIndex !== -1)) continue;
-        partyDealers.push(c);
-      } else {
-        if (partySupporters.length >= 1) continue;
-        partySupporters.push(c);
-      }
-
-      party.push(c);
-      partyUsers.add(c.userIndex);
-      usedIds.add(c.id);
-
-      if (party.length === 4) break;
+    if (c.type === "딜러") {
+      const isExternal = c.userIndex === -1;
+      if (partyDealers.length >= 3) continue;
+      if (!isExternal && partyDealers.some(d => d.job === c.job && d.userIndex !== -1)) continue;
+      partyDealers.push(c);
+    } else {
+      if (partySupporters.length >= 1) continue;
+      partySupporters.push(c);
     }
 
-    if (
-      party.length !== 4 ||
-      partyDealers.length !== 3 ||
-      partySupporters.length !== 1
-    ) {
-      valid = false;
-      break;
-    }
+    party.push(c);
+    partyUsers.add(c.userIndex);
+    usedIds.add(c.id);
 
-    result.push(party);
-    party.forEach(c => usedUsers.add(c.userIndex));
+    if (party.length === 4) break;
   }
 
-  if (valid) return { success: true, raid: result };
+  if (
+    party.length !== 4 ||
+    partyDealers.length !== 3 ||
+    partySupporters.length !== 1
+  ) {
+    return { success: false };
+  }
+
+  result.push(party);
+  party.forEach(c => usedUsers.add(c.userIndex));
 }
 
-return { success: false };
+return { success: true, raid: result };
 };
 
 // 외부 인원 포함 보완용 구성 함수
