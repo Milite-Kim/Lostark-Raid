@@ -1,4 +1,3 @@
-<!-- v1.1 deploy -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>공격대 구성기</title>
   <link rel="stylesheet" href="style.css">
-  <script src="Common.js?v=1.1"></script>
-  <script id="mode-script" src="Raid16.js?v=1.1" defer></script>
+  <script src="Common.js"></script>
+  <script id="mode-script" src="Raid16.js" defer></script>
 </head>
 <body>
 
@@ -35,7 +34,7 @@
       if (scriptTag) scriptTag.remove();
       const newScript = document.createElement('script');
       newScript.id = 'mode-script';
-      newScript.src = mode === 8 ? 'Raid8.js?v=1.1' : 'Raid16.js?v=1.1';
+      newScript.src = mode === 8 ? 'Raid8.js' : 'Raid16.js';
       newScript.defer = true;
       document.body.appendChild(newScript);
     }
